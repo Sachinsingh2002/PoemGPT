@@ -9,6 +9,11 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			'inter': ['var(--font-inter)', 'sans-serif'],
+  			'playfair': ['var(--font-playfair)', 'serif'],
+  			'crimson': ['var(--font-crimson)', 'serif'],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -55,6 +60,10 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		animation: {
+  			'gradient': 'gradient 15s ease infinite',
+  			'floating': 'floating 6s ease-in-out infinite',
   		}
   	}
   },
