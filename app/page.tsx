@@ -1,97 +1,159 @@
-'use client'     
- 
-import { useState } from "react"
-import { Button } from "@/components/ui/button" 
-import { Card } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import HeaderButton from "@/components/HeaderButton"
-import Footer from "@/components/Footer"
+'use client';
+
+import { useState } from 'react';
+import { BookOpen, Sparkles, Loader2, User, Copy } from 'lucide-react';
+import Link from 'next/link';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Home() {
-  const [prompt, setPrompt] = useState("")
-  const [poem, setPoem] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [prompt, setPrompt] = useState('');
+  const [poem, setPoem] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const generatePoem = async () => {
-    setIsLoading(true)
+    if (!prompt.trim()) return;
+
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/poem-generator", {
-        method: "POST",
+      const response = await fetch('/api/poem-generator', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ prompt }),
-      })
-      const data = await response.json()
-      setPoem(data.poem.join("\n")) // Join the array of strings into a single string
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate poem');
+      }
+
+      const data = await response.json();
+      setPoem(Array.isArray(data.poem) ? data.poem.join('\n') : data.poem);
     } catch (error) {
-      console.error("Failed to generate poem:", error)
+      console.error('Error generating poem:', error);
+      setPoem('Sorry, there was an error generating your poem. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false)
-  }
+  };
+
+  const clearPoem = () => {
+    setPoem('');
+    setPrompt('');
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(poem);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      generatePoem();
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-8 sm:py-16 bg-gray-100">
-      <header className="w-full max-w-3xl space-y-3 text-center">
-        <h1 className="text-3xl sm:text-4xl tracking-wide">PoemGPT</h1>
-        <p className="text-lg sm:text-xl text-zinc-500/80 font-serif italic pb-1">
-        Unleash your imagination, one verse at a time ~ create poetry that speaks your soul.
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <HeaderButton text="how to prompt" dotColor="bg-blue-400" href="/how-to-prompt" />
-          <HeaderButton text="source code" dotColor="bg-lime-500" href="https://github.com/Sachinsingh2002/PoemGPT" />
-          <HeaderButton text="bugs log" dotColor="bg-rose-400" href="" />
-        </div>
-      </header>
-
-      <main className="w-full max-w-3xl mt-8 flex-grow">
-        <Card className="p-6">
-          <Textarea 
-            placeholder="generate a poem about..."
-            className="min-h-[100px] resize-none border-0 focus-visible:ring-0 text-lg p-0 mb-4"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          <div className="flex justify-end gap-2">
-            <Button 
-              className="bg-gray-200 text-gray-900 hover:bg-gray-300"
-              onClick={() => {
-                setPrompt("");
-                setPoem("");
-              }}
-            >
-              Clear
-            </Button>
-            <Button 
-              className="bg-gray-200 text-gray-900 hover:bg-gray-300"
-              onClick={generatePoem}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Generating...' : 'Generate Poem'}
-            </Button>
+    <div className="main-container">
+      <ThemeToggle />
+      <div className="content-wrapper">
+        <header className="main-header">
+          <div className="logo-container">
+            <BookOpen size={24} />
           </div>
-          {isLoading && (
-            <div className="mt-4 flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
-            </div>
-          )}
-          {poem && (
-            <div className="mt-4 border-t pt-4">
-              <h3 className="text-lg font-semibold mb-2">Generated Poem:</h3>
-              <div className="bg-white p-4 rounded-md shadow-sm">
-                {poem.split('\n').map((line, index) => (
-                  <p key={index} className="mb-2">
-                    {line.trim() || <br />}
-                  </p>
-                ))}
-              </div>
-            </div>
-          )}
-        </Card>
-      </main>
+          <h1 className="main-title">
+            Poem<span className="gradient-text">GPT</span>
+          </h1>
+          <p className="subtitle">
+            Create beautiful, personalized poems with the power of artificial intelligence
+          </p>
+          
+          <div className="nav-buttons">
+            <Link href="/how-to-prompt" className="nav-button">
+              <div className="dot-indicator" style={{ backgroundColor: 'var(--accent-primary)' }}></div>
+              How to Prompt
+            </Link>
+            <a href="https://github.com/Sachinsingh2002/PoemGPT" target="_blank" className="nav-button">
+              <div className="dot-indicator" style={{ backgroundColor: '#10b981' }}></div>
+              Source Code
+            </a>
+            <a href="#" className="nav-button">
+              <div className="dot-indicator" style={{ backgroundColor: '#f59e0b' }}></div>
+              About
+            </a>
+          </div>
+        </header>
 
-      <Footer />
+        <div className="glass-card">
+          <div className="card-header">
+            <User size={16} />
+            <span className="card-title">Describe your poem</span>
+          </div>
+          
+          <div className="textarea-container">
+            <textarea
+              className="main-textarea"
+              placeholder="Describe the poem you'd like me to create..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={handleKeyPress}
+              rows={4}
+            />
+          </div>
+
+          <div className="button-group">
+            <button
+              className="btn btn-primary"
+              onClick={generatePoem}
+              disabled={isLoading || !prompt.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="loading-spinner" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  Generate Poem
+                </>
+              )}
+            </button>
+            
+            {(poem || prompt) && (
+              <button className="btn btn-secondary" onClick={clearPoem}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {poem && (
+          <div className="poem-display">
+            <div className="poem-title">
+              <BookOpen size={16} />
+              Your Generated Poem
+            </div>
+            <div className="poem-text">{poem}</div>
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <button className="btn btn-secondary" onClick={copyToClipboard}>
+                <Copy size={16} />
+                Copy Poem
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="footer">
+        <div className="version-badge">v1.0.0</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>Built by</span>
+          <a href="https://sachinsingh2002.vercel.app/" target="_blank">
+            Sachin Singh
+          </a>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
-
